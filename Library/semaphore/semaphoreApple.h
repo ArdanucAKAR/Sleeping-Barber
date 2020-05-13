@@ -1,11 +1,12 @@
 #include <errno.h>
+#include <stdint.h>
 #ifdef __APPLE__
-#include "../dispatch/dispatch.h"
+#include <dispatch/dispatch.h>
 #else
 #include <semaphore.h>
 #endif
 
-struct rk_sema
+struct dis_sem
 {
 #ifdef __APPLE__
     dispatch_semaphore_t sem;
@@ -14,7 +15,7 @@ struct rk_sema
 #endif
 };
 
-static inline void rk_sema_init(struct rk_sema *s, uint32_t value)
+static inline void dis_sem_init(struct dis_sem *s, uint32_t value)
 {
 #ifdef __APPLE__
     dispatch_semaphore_t *sem = &s->sem;
@@ -25,7 +26,7 @@ static inline void rk_sema_init(struct rk_sema *s, uint32_t value)
 #endif
 }
 
-static inline void rk_sema_wait(struct rk_sema *s)
+static inline void dis_sem_wait(struct dis_sem *s)
 {
 #ifdef __APPLE__
     dispatch_semaphore_wait(s->sem, DISPATCH_TIME_FOREVER);
@@ -39,7 +40,7 @@ static inline void rk_sema_wait(struct rk_sema *s)
 #endif
 }
 
-static inline void rk_sema_post(struct rk_sema *s)
+static inline void dis_sem_post(struct dis_sem *s)
 {
 #ifdef __APPLE__
     dispatch_semaphore_signal(s->sem);

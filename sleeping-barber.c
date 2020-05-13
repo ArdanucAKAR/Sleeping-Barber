@@ -9,9 +9,15 @@
 #define CUT_TIME 1 /* Saç kesme için kullanılacak süre */
 
 /* semaforlar */
+#ifdef __APPLE__
 sem_t* barbers;   /* berberler için semafor */
 sem_t* customers; /* müşteriler için semafor */
 sem_t* mutex;     /* berber koltuğuna karşılıklı münhasır erişim sağlar */
+#else
+sem_t barbers;   /* berberler için semafor */
+sem_t customers; /* müşteriler için semafor */
+sem_t mutex;     /* berber koltuğuna karşılıklı münhasır erişim sağlar */
+#endif
 
 /* değişkenler */
 int chairCount = 0;         /* bekleme odasındaki sandalye sayısı */
@@ -38,8 +44,8 @@ void Barber(void *count)
             printf("[Barber: %d]\tuyumaya gitti.\n\n", s);
         }
 
-        rk_sema_wait(&barbers); /* uyuyan berberlerin kuyruğuna katıl */
-        rk_sema_wait(&mutex);   /* koltuğa erişimi kilitle */
+        dis_sem_wait(&barbers); /* uyuyan berberlerin kuyruğuna katıl */
+        dis_sem_wait(&mutex);   /* koltuğa erişimi kilitle */
 
         /* hizmet edilecek müşterinin bekleyenlerin arasından seçilmesi */
         customerToBeServed = (++customerToBeServed) % chairCount;
@@ -47,8 +53,8 @@ void Barber(void *count)
         customerID = seat[nextCustomer];
         seat[nextCustomer] = pthread_self();
 
-        rk_sema_post(&mutex);     /* koltuğa erişim kilidini kaldır */
-        rk_sema_post(&customers); /* seçilen müşteriyle ilgilen */
+        dis_sem_post(&mutex);     /* koltuğa erişim kilidini kaldır */
+        dis_sem_post(&customers); /* seçilen müşteriyle ilgilen */
 
         printf("[Berber: %d]\t%d. müşterinin saçını kesmeye başladı.\n\n", s, customerID);
         sleep(CUT_TIME);
@@ -77,21 +83,21 @@ void Customer(void *count)
         chairTaken = chairToBeSeated;
         seat[chairTaken] = s;
 
-        rk_sema_post(&mutex);   /* koltuğa erişim kilidini kaldır */
-        rk_sema_post(&barbers); /* uygun berberi uyandır */
+        dis_sem_post(&mutex);   /* koltuğa erişim kilidini kaldır */
+        dis_sem_post(&barbers); /* uygun berberi uyandır */
 
-        rk_sema_wait(&customers); /* bekleyen müşteriler kuyruğuna katıl */
-        rk_sema_wait(&mutex);     /* koltuğu korumak için erişimi kilitle */
+        dis_sem_wait(&customers); /* bekleyen müşteriler kuyruğuna katıl */
+        dis_sem_wait(&mutex);     /* koltuğu korumak için erişimi kilitle */
 
         /* berber koltuğuna geç */
         barberID = seat[chairTaken];
         emptyChairCount++;
 
-        rk_sema_post(&mutex); /* koltuğa erişim kilidini kaldır */
+        dis_sem_post(&mutex); /* koltuğa erişim kilidini kaldır */
     }
     else
     {
-        rk_sema_post(&mutex); /* koltuğa erişim kilidini kaldır */
+        dis_sem_post(&mutex); /* koltuğa erişim kilidini kaldır */
         printf("[Müşteri: %d]\tbekleme salonunda yer bulamadı. Dükkandan ayrılıyor.\n\n", s);
     }
     pthread_exit(0);
@@ -130,9 +136,9 @@ int main(int argc, char** args)
     pthread_t barber[seatCount], customer[customerCount]; /* iş parçaları */
 
     /* semaforların oluşturulması */
-    rk_sema_init(&barbers, 0);
-    rk_sema_init(&customers, 0);
-    rk_sema_init(&mutex, 1);
+    dis_sem_init(&barbers, 0);
+    dis_sem_init(&customers, 0);
+    dis_sem_init(&mutex, 1);
 
     printf("\nBerber dükkanı açıldı.\n\n");
 
