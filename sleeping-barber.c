@@ -44,19 +44,22 @@ void Barber(void *count)
 
         dis_sem_wait(&barbers); /* Uyuyan Berberlerin Kuyruğuna Katıl */
         dis_sem_wait(&mutex);   /* Koltuğa Erişimi Kilitle */
-
+        
         /* Hizmet Edilecek Müşterinin Bekleyenlerin Arasından Seçilmesi */
         customerToBeServed = (++customerToBeServed) % chairCount;
         nextCustomer = customerToBeServed;
         customerID = seat[nextCustomer];
+        printf("[Berber: %d]\t%d. müşterinin saçını kesmeye başladı.\n\n", s, customerID);
         seat[nextCustomer] = pthread_self();
+         sleep(CUT_TIME);
+        printf("[Berber: %d]\t%d. müşterinin saçını kesmeyi bitirdi.\n\n", s, customerID);
 
         dis_sem_post(&mutex);     /* Koltuğa Erişim Kilidini Kaldır */
         dis_sem_post(&customers); /* Seçilen Müşteriyle İlgilen */
 
-        printf("[Berber: %d]\t%d. müşterinin saçını kesmeye başladı.\n\n", s, customerID);
-        sleep(CUT_TIME);
-        printf("[Berber: %d]\t%d. müşterinin saçını kesmeyi bitirdi.\n\n", s, customerID);
+       
+       
+        
     }
 }
 
