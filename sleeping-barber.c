@@ -3,32 +3,30 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
-#include "Library/semaphore/semaphoreApple.h"
+#include "Library/semaphore/semaphore.h"
 
-#define CUSTOMER_LIMIT 10       /* Müşteriler için iş parçası sınırı */
-#define CUT_TIME 1 /* Saç kesme için kullanılacak süre */
+#define CUSTOMER_LIMIT 10       /* Berber Dükkanı Müşteri Sınırı */
+#define CUT_TIME 1              /* Berberin Saç Kesme Süresi */
 
 /* semaforlar */
 #ifdef __APPLE__
-sem_t* barbers;   /* berberler için semafor */
-sem_t* customers; /* müşteriler için semafor */
-sem_t* mutex;     /* berber koltuğuna karşılıklı münhasır erişim sağlar */
+sem_t* barbers;                 /* MacOS için Berber Semafor */
+sem_t* customers;               /* MacOS için Müşteri Semafor */
+sem_t* mutex;                   /* Berber Koltuğuna Erişim */
 #else
-sem_t barbers;   /* berberler için semafor */
-sem_t customers; /* müşteriler için semafor */
-sem_t mutex;     /* berber koltuğuna karşılıklı münhasır erişim sağlar */
+sem_t barbers;                  /* Berber Semafor */
+sem_t customers;                /* Müşteri Semafor */
+sem_t mutex;                    /* Berber Koltuğuna Erişim */
 #endif
 
 /* değişkenler */
-int chairCount = 0;         /* bekleme odasındaki sandalye sayısı */
-int customerToBeServed = 0; /* hizmet edilecek müşteri kimliği */
-int* seat;                 /* berber - müşteri arasında kimlik takası için */
-
-int emptyChairCount = 0;            /* bekleme odasındaki boş sandalye sayısı */
-int chairToBeSeated = 0;       /* müşterinin oturacağı sandalye kimliği */
-
-int seatCount = 0;           /* berber koltuğu sayısı */
-int customerCount = 0;          /* müşteri sayısı */
+int chairCount = 0;             /* Bekleme Koltuğu Sayısı */
+int customerToBeServed = 0;     /* Hizmet Edilecek Müşteri Sayısı */
+int* seat;                      /* Berber - Müşteri Arasında Kimlik Takası İçin */
+int emptyChairCount = 0;        /* Bekleme Odasındaki Boş Koltuk Sayısı */
+int chairToBeSeated = 0;        /* Müşterinin Oturacağı Sandalye Kimliği */
+int seatCount = 0;              /* Berber Koltuğu Sayısı */
+int customerCount = 0;          /* Müşteri Sayısı */
 
 void Barber(void *count)
 {
@@ -44,17 +42,17 @@ void Barber(void *count)
             printf("[Barber: %d]\tuyumaya gitti.\n\n", s);
         }
 
-        dis_sem_wait(&barbers); /* uyuyan berberlerin kuyruğuna katıl */
-        dis_sem_wait(&mutex);   /* koltuğa erişimi kilitle */
+        dis_sem_wait(&barbers); /* Uyuyan Berberlerin Kuyruğuna Katıl */
+        dis_sem_wait(&mutex);   /* Koltuğa Erişimi Kilitle */
 
-        /* hizmet edilecek müşterinin bekleyenlerin arasından seçilmesi */
+        /* Hizmet Edilecek Müşterinin Bekleyenlerin Arasından Seçilmesi */
         customerToBeServed = (++customerToBeServed) % chairCount;
         nextCustomer = customerToBeServed;
         customerID = seat[nextCustomer];
         seat[nextCustomer] = pthread_self();
 
-        dis_sem_post(&mutex);     /* koltuğa erişim kilidini kaldır */
-        dis_sem_post(&customers); /* seçilen müşteriyle ilgilen */
+        dis_sem_post(&mutex);     /* Koltuğa Erişim Kilidini Kaldır */
+        dis_sem_post(&customers); /* Seçilen Müşteriyle İlgilen */
 
         printf("[Berber: %d]\t%d. müşterinin saçını kesmeye başladı.\n\n", s, customerID);
         sleep(CUT_TIME);
@@ -67,37 +65,37 @@ void Customer(void *count)
     int s = *(int*)count + 1;
     int chairTaken, barberID;
 
-    sem_wait(&mutex); /* koltuğu korumak için erişimi kilitle */
+    dis_sem_wait(&mutex); /* Koltuğu Korumak İçin Erişimi Kilitle */
 
     printf("[Müşteri: %d]\tdükkana geldi.\n", s);
 
-    /* bekleme odasında boş sandalye varsa */
+    /* Bekleme Odasında Boş Sandalye Varsa */
     if (emptyChairCount > 0)
     {
         emptyChairCount--;
 
         printf("[Müşteri: %d]\tbekleme salonunda bekliyor.\n\n", s);
 
-        /* bekleme salonundan bir sandalye seçip otur */
+        /* Bekleme Salonundan Bir Sandalye Seçip Otur */
         chairToBeSeated = (++chairToBeSeated) % chairCount;
         chairTaken = chairToBeSeated;
         seat[chairTaken] = s;
 
-        dis_sem_post(&mutex);   /* koltuğa erişim kilidini kaldır */
-        dis_sem_post(&barbers); /* uygun berberi uyandır */
+        dis_sem_post(&mutex);   /* Koltuğa Erişim Kilidini Kaldır */
+        dis_sem_post(&barbers); /* Uygun Berberi Uyandır */
 
-        dis_sem_wait(&customers); /* bekleyen müşteriler kuyruğuna katıl */
-        dis_sem_wait(&mutex);     /* koltuğu korumak için erişimi kilitle */
+        dis_sem_wait(&customers); /* Bekleyen Müşteriler Kuyruğuna Katıl */
+        dis_sem_wait(&mutex);     /* Koltuğu Korumak İçin Erişimi Kilitle */
 
-        /* berber koltuğuna geç */
+        /* Berber Koltuğuna Geç */
         barberID = seat[chairTaken];
         emptyChairCount++;
 
-        dis_sem_post(&mutex); /* koltuğa erişim kilidini kaldır */
+        dis_sem_post(&mutex); /* Koltuğa Erişim Kilidini Kaldır */
     }
     else
     {
-        dis_sem_post(&mutex); /* koltuğa erişim kilidini kaldır */
+        dis_sem_post(&mutex); /* Koltuğa Erişim Kilidini Kaldır */
         printf("[Müşteri: %d]\tbekleme salonunda yer bulamadı. Dükkandan ayrılıyor.\n\n", s);
     }
     pthread_exit(0);
@@ -133,30 +131,30 @@ int main(int argc, char** args)
     printf("\nGirilen Sandalye Sayısı:\t%d", chairCount);
     printf("\nGirilen Berber Koltuğu Sayısı:\t%d\n\n", seatCount);
 
-    pthread_t barber[seatCount], customer[customerCount]; /* iş parçaları */
+    pthread_t barber[seatCount], customer[customerCount]; /* İş Parçaları */
 
-    /* semaforların oluşturulması */
+    /* Semaforların Oluşturulması */
     dis_sem_init(&barbers, 0);
     dis_sem_init(&customers, 0);
     dis_sem_init(&mutex, 1);
 
     printf("\nBerber dükkanı açıldı.\n\n");
 
-    /* berber iş parçalarının oluşturulması */
+    /* Berber İş Parçalarının Oluşturulması */
     for (int i = 0; i < seatCount; i++)
     {
         pthread_create(&barber[i], NULL, (void*)Barber, (void*)&i);
         sleep(1);
     }
 
-    /* müşteri iş parçalarının oluşturulması */
+    /* Müşteri İş Parçalarının Oluşturulması */
     for (int i = 0; i < customerCount; i++)
     {
         pthread_create(&customer[i], NULL, (void*)Customer, (void*)&i);
-        Wait(); /* müşterileri rastgele aralıklarda oluşturmak için */
+        Wait(); /* Müşterileri Rastgele Aralıklarda Oluşturmak İçin */
     }
 
-    /* dükkanı kapatmadan önce tüm müşteriler ile ilgilen */
+    /* Dükkanı Kapatmadan Önce Tüm Müşteriler İle İlgilen */
     for (int i = 0; i < customerCount; i++)
     {
         pthread_join(customer[i], NULL);
