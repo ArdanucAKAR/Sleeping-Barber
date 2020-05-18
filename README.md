@@ -9,7 +9,7 @@ Berber, gerekli olmadıkça uyanık olmaktan hoşlanmaz, yani hiçbir müşteri 
 # Nasıl Çalışır
 Terminal programını açıp 
 ```sh
-$ bash apple.command
+$ bash compile.sh
 ```
 şeklinde önceden hazırlanmış değerle ilk çalıştırmasını yapabilirsiniz. Sonradan yapacağınız çalıştırmalarda ise
 ```sh
