@@ -1,5 +1,5 @@
 # Uyuyan Berber
-![GitHub Logo](https://lh4.googleusercontent.com/JrFhISJqn2w22eeDFxj7X1nKXMmw7oCAneXk_HWo3Ov7Phl_EFms7NWFxpeoQVp1Xb_pPVoleYHBBxvxtFeW=w4096-h2338-rw)
+![GitHub Logo](https://r.resimlink.com/vitx.png)
 # Problem
 Berber, gerekli olmadıkça uyanık olmaktan hoşlanmaz, yani hiçbir müşteri beklemez. Bir müşteri bu berber dükkânına girdiğinde, oturur ve uyuyorsa berber uyanır. Müşteri oturamazsa, berber dükkânından dışarı çıkar. Berber müşterinin saçını keser ve bekleme koltuklarında bekleyen bir müşteri daha alır. Tüm koltuklar boşsa, Berber bir müşteri onu uyandırıncaya kadar uyur.
 # Gereksinim
